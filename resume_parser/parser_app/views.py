@@ -20,6 +20,7 @@ from rest_framework.authtoken.models import Token
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from .serializers import UserDetailsSerializer, CompetenciesSerializer, MeasurableResultsSerializer, ResumeSerializer, ResumeDetailsSerializer
+import MySQLdb
 
 def homepage(request):
     if request.method == 'POST':
@@ -119,6 +120,23 @@ def homepage(request):
                     'education': data.get('education'),
                     'designation': data.get('designation')
                     }
+
+            db = MySQLdb.connect("localhost","root","1234","parser" )
+            cursor = db.cursor()
+            sql = """INSERT INTO resume(File, Name, Email, Mobile, Designation, Education, Skills, Experience) VALUES ('{file}','{name}','{email}','{mobile}','{designation}','{education}','{skills}','{experience}')"""
+            name = data.get("name")
+            email=data.get('email')
+            mobile= data.get('mobile_number') if(data.get('mobile_number')) else 0
+            designation=data.get('designation')
+            education=data.get('education')
+            skills=""
+            experience=data.get('total_experience')
+            
+            for i in data.get('skills'):
+                skills += i
+            sql = sql.format(file=file, name=name, email=email, mobile=mobile, designation=designation, education=education, skills=skills, experience=experience)
+            cursor.execute(sql)
+            db.commit()
             return render(request, 'base.html', context)
     else:
         form = UploadResumeModelForm()
